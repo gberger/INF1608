@@ -21,8 +21,10 @@ double max_fcos_error() {
     }
   }
 
-  printf("Max error is %f.\nfcos(%f) = %f\n cos(%f) = %f\n",
+  printf("Max error is %f\nfcos(%f) = %f\n cos(%f) = %f\n",
     max_error, max_error_x, fcos(max_error_x), max_error_x, cos(max_error_x));
+
+  printf("Residuo obtido analiticamente: %f\n", fabs(-pow(M_PI/2, 5)/120));
 
   return max_error;
 }
