@@ -1,0 +1,1 @@
+double pontofixo(double x0, double epsilon, double (*g) (double x));

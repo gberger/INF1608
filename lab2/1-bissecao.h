@@ -1,0 +1,1 @@
+double bissecao (double a, double b, int p, double (*f) (double x));
