@@ -86,43 +86,30 @@ Sparse** cria_segundo_sistema(int n) {
   return A;
 }
 
-Sparse** precond_jacobi(int n, Sparse** A, double* b) {
+Sparse** precond_jacobi(int n, Sparse** A) {
   int i;
-
-  double* b_ = vet_cria(n);
-  Sparse** Minv = sparse_cria(n);
-  Sparse** C;
+  Sparse** M = sparse_cria(n);
 
   for(i = 0; i < n; i++) {
-    Minv[i] = malloc(sizeof(Sparse) * 2);
+    M[i] = malloc(sizeof(Sparse) * 2);
 
-    Minv[i][0].col = i;
-    Minv[i][0].val = 1.0/sparse_get(i, i, A);
+    M[i][0].col = i;
+    M[i][0].val = 1.0/sparse_get(i, i, A);
 
-    Minv[i][1].col = -1;
+    M[i][1].col = -1;
   }
 
-
-  C = sparse_multm(n, Minv, A);
-
-  sparse_multv(n, Minv, b, b_);
-  vet_copia(n, b_, b);
-
-  return C;
+  return M;
 }
 
-Sparse** precond_ssor(int n, Sparse** A, double* b, double w) {
+Sparse** precond_ssor(int n, Sparse** A, double w) {
   int i, j, k;
 
-  double* b_ = vet_cria(n);
-
-  Sparse** C;
   Sparse** M1 = sparse_cria(n);
   Sparse** M2 = sparse_cria(n);
   Sparse** M3 = sparse_cria(n);
   Sparse** Ma;
-  Sparse** Mb;
-  Sparse** Minv;
+  Sparse** M;
 
   for(i = 0; i < n; i++) {
     M1[i] = malloc(sizeof(Sparse) * n);
@@ -172,16 +159,9 @@ Sparse** precond_ssor(int n, Sparse** A, double* b, double w) {
   }
 
   Ma = sparse_multm(n, M1, M2);
-  Mb = sparse_multm(n, Ma, M3);
-  // M = sparse_inv(n, Mb);
-  Minv = Mb;
+  M = sparse_multm(n, Ma, M3);
 
-  C = sparse_multm(n, Minv, A);
-
-  sparse_multv(n, Minv, b, b_);
-  vet_copia(n, b_, b);
-
-  return C;
+  return M;
 }
 
 double* cria_x(int n) {
@@ -208,54 +188,79 @@ void testa(int n, Sparse** A, double* b, double* xbarra, double* xsol) {
   printf("\n");
 }
 
+void testaPC(int n, Sparse** A, double* b, double* xbarra, double* xsol, Sparse** M) {
+  int i, iter;
+  double dif;
+
+  iter = ConjugateGradientPC(n, A, b, xbarra, M);
+
+  for(i = 0; i < n; i++) {
+    dif += fabs((xbarra[i] - xsol[i])/xsol[i]);
+  }
+  dif = dif / n;
+  printf("Erro: %f%%\n", dif*100);
+  printf("Iteracoes: %d\n", iter);
+  printf("\n");
+}
+
 int main(void) {
   int i;
-  int n = 100;
+  int n = 1000;
   Sparse** A;
   double* x;
   double* b;
   double* xbarra;
+  Sparse** M;
 
 
   printf("**** N = %d\n\n", n);
 
-  printf("Sem pre-cond\n");
-  A = cria_segundo_sistema(n);
-  x = cria_x(n);  
-  b = vet_cria(n);
-  xbarra = calloc(n, sizeof(double));
-  sparse_multv(n, A, x, b);
-  testa(n, A, b, xbarra, x);
+  // printf("Sem pre-cond\n");
+  // A = cria_primeiro_sistema(n);
+  // x = cria_x(n);  
+  // b = vet_cria(n);
+  // xbarra = calloc(n, sizeof(double));
+  // sparse_multv(n, A, x, b);
+  // testa(n, A, b, xbarra, x);
 
 
-  printf("Jacobi\n");
-  A = cria_segundo_sistema(n);
-  x = cria_x(n);  
-  b = vet_cria(n);
-  xbarra = calloc(n, sizeof(double));
-  sparse_multv(n, A, x, b);
-  A = precond_jacobi(n, A, b);
-  testa(n, A, b, xbarra, x);
+  // printf("Jacobi\n");
+  // A = cria_primeiro_sistema(n);
+  // x = cria_x(n);  
+  // b = vet_cria(n);
+  // xbarra = calloc(n, sizeof(double));
+  // sparse_multv(n, A, x, b);
+  // A = precond_jacobi(n, A, b);
+  // testa(n, A, b, xbarra, x);
 
+
+  // printf("Jacobi\n");
+  // A = cria_primeiro_sistema(n);
+  // x = cria_x(n);  
+  // b = vet_cria(n);
+  // xbarra = calloc(n, sizeof(double));
+  // sparse_multv(n, A, x, b);
+  // M = precond_jacobi(n, A);
+  // testaPC(n, A, b, xbarra, x, M);
 
   printf("Gauss-Seidel\n");
-  A = cria_segundo_sistema(n);
+  A = cria_primeiro_sistema(n);
   x = cria_x(n);  
   b = vet_cria(n);
   xbarra = calloc(n, sizeof(double));
   sparse_multv(n, A, x, b);
-  A = precond_ssor(n, A, b, 1.0);
-  testa(n, A, b, xbarra, x);
+  M = precond_ssor(n, A, 1.0);
+  testaPC(n, A, b, xbarra, x, M);
   
 
-  printf("SSOR, w=1.1\n");
-  A = cria_segundo_sistema(n);
-  x = cria_x(n);  
-  b = vet_cria(n);
-  xbarra = calloc(n, sizeof(double));
-  sparse_multv(n, A, x, b);
-  A = precond_ssor(n, A, b, 1.1);
-  testa(n, A, b, xbarra, x);
+  // printf("SSOR, w=1.1\n");
+  // A = cria_primeiro_sistema(n);
+  // x = cria_x(n);  
+  // b = vet_cria(n);
+  // xbarra = calloc(n, sizeof(double));
+  // sparse_multv(n, A, x, b);
+  // A = precond_ssor(n, A, b, 1.1);
+  // testa(n, A, b, xbarra, x);
 
   return 0;
 }
