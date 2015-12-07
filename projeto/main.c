@@ -37,48 +37,51 @@ Sparse** cria_primeiro_sistema(int n) {
 }
 
 Sparse** cria_segundo_sistema(int n) {
-  int i, k, col;
+  int i, k, col, lin;
+  int c1, c2, c3, c4;
   Sparse** A = sparse_cria(n);
 
   for (i = 0; i < n; i++) {
+    lin = i+1;
+
     A[i] = malloc(sizeof(Sparse) * 8);
 
     A[i][0].col = i;
     A[i][0].val = i+1;
 
-    A[i][1].col = mod(i+1, n);
+    c1 = mod(i+1, n);
+    A[i][1].col = c1;
     A[i][1].val = 0.5;
 
-    A[i][2].col = mod(i+2, n);
+    c2 = mod(i+2, n);
+    A[i][2].col = c2;
     A[i][2].val = 0.5;
 
-    A[i][3].col = mod(i-1, n);
+    c3 = mod(i-1, n);
+    A[i][3].col = c3;
     A[i][3].val = 0.5;
 
-    A[i][4].col = mod(i-2, n);
+    c4 = mod(i-2, n);
+    A[i][4].col = c4;
     A[i][4].val = 0.5;
 
-    if(i+1 < n/2) {
-      k = 5;
+    k = 5;
 
-      col = (i+1)/2;
-      if(col != i && col != mod(i+1, n)&& col != mod(i+2, n)&& col != mod(i-1, n)&& col != mod(i-2, n)){
-        A[i][k].col = col;
-        A[i][k].val = 0.5;
-        k++;        
-      }
-
-      col = (i+1)*2;
-      if(i * 2 < n && col != i && col != mod(i+1, n)&& col != mod(i+2, n)&& col != mod(i-1, n)&& col != mod(i-2, n)){
-        A[i][k].col = col;
-        A[i][k].val = 0.5;
-        k++;
-      }
-
-      A[i][k].col = -1;
-    } else {
-      A[i][5].col = -1;
+    col = lin * 2 - 1;
+    if(lin < n/2.0 && col != i && col != c1 && col != c2 && col != c3 && col != c4){
+      A[i][k].col = col;
+      A[i][k].val = 0.5;
+      k++;        
     }
+
+    col = lin / 2 - 1;
+    if(lin % 2 == 0 && col != i && col != c1 && col != c2 && col != c3 && col != c4){
+      A[i][k].col = col;
+      A[i][k].val = 0.5;
+      k++;
+    }
+
+    A[i][k].col = -1;
   }
   return A;
 }
@@ -207,7 +210,7 @@ void testa(int n, Sparse** A, double* b, double* xbarra, double* xsol) {
 
 int main(void) {
   int i;
-  int n = 1000;
+  int n = 100;
   Sparse** A;
   double* x;
   double* b;
